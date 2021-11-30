@@ -1,40 +1,56 @@
 #include "stdint.h"
 #include "lpc21xx.h"
 
-extern void pc_swap(uint32_t *current_cor, uint32_t next_cor);
-extern void cor_start(uint32_t cor);
+#include "rtos.h"
+
+/* This is a function to simplify proc_* procedures */
+void delay(void){
+	for(unsigned int uiDelayCounter = 0; uiDelayCounter < 500000; uiDelayCounter++){}
+}
+
+/* This is a function to simplify proc_* procedures */
+void pin_toggle(uint8_t pin_nr){
+	uint32_t mask = (1 << pin_nr);
+        if((IO1PIN & mask) != 0) IO1CLR = mask; else IO1SET = mask;
+}
+
+/* This is a function to simplify main */
+void pin_init(void){
+	IO1DIR = 0x30000;
+}
 
 
-uint32_t pc_cor_A;
-uint32_t pc_cor_B;
-
-void cor_A(void)
+void proc_A(void)
 {
 	while(1)
 	{
-		IO1SET = 0x10000;
-		pc_swap(&pc_cor_A, pc_cor_B);
+		pin_toggle(16);
+		delay();
+
+		yield();
 	}
 }
 
-void cor_B(void)
+void proc_B(void)
 {
 	while(1)
 	{
-		IO1CLR = 0x10000;
-		pc_swap(&pc_cor_B, pc_cor_A);
+		pin_toggle(17);
+		delay();
+
+		yield();
 	}
 }
-
-uint32_t pc_cor_A = (uint32_t)cor_A;
-uint32_t pc_cor_B = (uint32_t)cor_B;
 
 int main()
 {
 	InitPLL(5, PLLCFG_P_2_bm);
 	InitMAM(4);
 
-	IO1DIR = 0x10000;
+	pin_init();
 
-	cor_start(pc_cor_A);
+	proc_create(proc_A);
+	proc_create(proc_B);
+
+	proc_run(0);
 }
