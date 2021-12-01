@@ -6,7 +6,7 @@
 
 extern uint32_t cor_init(uint32_t stack_pointer, void *cor_address);
 extern void cor_start(uint32_t cor);
-extern void sp_swap(uint32_t *current_cor, uint32_t next_cor);
+extern void ctx_swap(uint32_t *current_cor, uint32_t next_cor);
 
 
 uint32_t cor_A_sp;
@@ -35,7 +35,7 @@ void cor_A(void)
 		pin_toggle(16);
         delay();
 
-		sp_swap(&cor_A_sp, cor_B_sp);
+		ctx_swap(&cor_A_sp, cor_B_sp);
 	}
 }
 
@@ -46,7 +46,7 @@ void cor_B(void)
 		pin_toggle(17);
         delay();
 
-		sp_swap(&cor_B_sp, cor_A_sp);
+		ctx_swap(&cor_B_sp, cor_A_sp);
 	}
 }
 
