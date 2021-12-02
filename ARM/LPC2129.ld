@@ -12,50 +12,52 @@ SECTIONS
 {
 	.init :
 	{
-		KEEP(*(.init))				/* isr vectors and  init */
+		. = ALIGN(4);
+		KEEP(*(.init))		/* isr vectors and  init */
+		. = ALIGN(4);
 	}
-	. = ALIGN(4);
 
 	.text :
 	{
+		. = ALIGN(4);
 		*(.text)                   /* code */
 		*(.rodata)                 /* constants */
 		*(.rodata*)
 		*(.glue_7)
 		*(.glue_7t)
+		. = ALIGN(4);
+		_etext = .;
 	} > ROM
-	. = ALIGN(4);
-
-	_etext = . ;
 
 	/* initialzed data */
 	.data :
 	{
-		_data = .;
+		. = ALIGN(4);
+		_sdata = .;
 		*(.data)
+		*(.data*)
+		. = ALIGN(4);
+		_edata = .;
 	} > RAM AT> ROM
-	. = ALIGN(4);
-
-	_edata = . ;
 
 	/* uninitialized data */
 	.bss (NOLOAD) :
 	{
-		_bss_start = . ;
+		. = ALIGN(4);
+		_sbss = .;
 		*(.bss)
+		*(.bss*)
 		*(COMMON)
+		. = ALIGN(4);
+		_ebss = .;
 	} > RAM
-	. = ALIGN(4);
-
-	_bss_end = . ;
 
 	/* left space for stack */
 	.stack (NOLOAD) :
 	{
-        . = ALIGN(4);
+		. = ALIGN(4);
 		. += STACK_SIZE;
+		. = ALIGN(4);
 		_stack = . ;
 	} > RAM
-
-	_end = . ;
 }
