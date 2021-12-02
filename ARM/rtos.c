@@ -8,7 +8,7 @@
 
 extern uint32_t proc_init(uint32_t stack_pointer, void *cor_address);
 extern void proc_start(uint32_t cor);
-extern void ctx_swap(uint32_t *current_cor, uint32_t next_cor);
+extern void ctx_swap(uint32_t *curr_cor, uint32_t next_cor);
 
 
 uint32_t proc[PROC_CNT];
@@ -19,10 +19,10 @@ void proc_create(void *proc_address)
 {
 	static uint8_t proc_ctr = 0;
 	proc[proc_ctr] = proc_init((STACK_BASE - (proc_ctr*STACK_SIZE*4)), proc_address);
-    proc_ctr++;
+	proc_ctr++;
 }
 
-void yield()
+void resched()
 {
 	uint8_t pid_prev = pid_curr;
 	pid_curr = (pid_curr+1)%PROC_CNT;
