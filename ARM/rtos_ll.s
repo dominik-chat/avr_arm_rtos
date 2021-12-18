@@ -2,12 +2,17 @@
 .global proc_start
 .global ctx_swap
 .global timer0_int_handler
+.global Int_SoftwareInterrupt
+.global svc_sleep
 .extern timer0_callback
+.extern svc_callback
 
 .set	VICVectAddr,	0xFFFFF030
 .set	T0IR,		0xE0004000
 .set	MODE_SYS,	0xDF		//System mode, irq disabled, fiq disabled
 .set	MODE_USER,	0x50		//User mode, irq enabled, fiq disabled
+.set	MODE_IRQ,	0x12		//IRQ Mode
+.set	MODE_SVC,	0x13		//Supervisor Mode
 
 .section  .text
 
@@ -61,6 +66,7 @@ proc_init:
 //Pops all user regs and lr from user stack
 timer0_int_handler:
 	sub	lr, lr, #4	//prepare lr
+Int_SoftwareInterrupt:		//much of code is shared between timer and software interrupt
 	push	{lr}		//push lr to IRQ stack
 
 //switch to user mode stack
@@ -70,8 +76,8 @@ timer0_int_handler:
 	pop	{lr}		//switch to user stack
 
 	stmfd	lr!, {r0-r12}	//store all gp regs to user stack
-	pop	{r0}		//old pc, stored at beginning of function
-	str	r0, [lr, #-4]!	//store pc to user stack
+	pop	{r1}		//old pc, stored at beginning of function
+	str	r1, [lr, #-4]!	//store pc to user stack
 
 //update user stack pointer
 	push	{lr}
@@ -83,7 +89,17 @@ timer0_int_handler:
 //r0,r1,r2,...,r12, pc
 //		    ^user stack pointer
 
-	bl	timer0_callback
+	mrs	r2, CPSR	//check if timer irq or swi
+	and	r2, r2, #0x1F
+	cmp	r2, #MODE_IRQ
+	beq	1f		//jump to timer callback if it's timer irq
+
+	ldr	r1, [r1, #-4]	//load svc instruction
+	and	r1, r1, #0xFF	//only care about 8 bits
+	bl	svc_callback	//jump to supervisor callback if it's svc; r0-argument, r1-type
+	b	2f
+1:	bl	timer0_callback
+2:
 
 //switch to user mode stack
 	stmfd	sp, {sp}^	//push user sp to irq stack
@@ -102,3 +118,8 @@ timer0_int_handler:
 	add	sp, sp, #4	//increment sp manually
 
 	ldmfd	sp!, {pc}^	//return to user mode with new pc
+
+/* All SVCs */
+svc_sleep:
+	svc	#0
+	bx	lr
