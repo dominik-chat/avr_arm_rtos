@@ -17,24 +17,23 @@ void pin_init(void){
 
 void process_A(void)
 {
-	static uint32_t ctr = 0;
-
 	while(1)
 	{
-		if (ctr==12500)
-		{
-			sem_give(0);
-		}
-		else if(ctr==25000)
-		{
-			sem_give(1);
-			ctr=0;
-		}
-		ctr++;
+		sem_give(0);
+		proc_sleep(243);
 	}
 }
 
 void process_B(void)
+{
+	while(1)
+	{
+		sem_give(1);
+		proc_sleep(113);
+	}
+}
+
+void process_C(void)
 {
 	while(1)
 	{
@@ -43,12 +42,20 @@ void process_B(void)
 	}
 }
 
-void process_C(void)
+void process_D(void)
 {
 	while(1)
 	{
 		sem_take(1);
 		pin_toggle(17);
+	}
+}
+
+void process_idle(void)
+{
+	while(1)
+	{
+
 	}
 }
 
@@ -59,6 +66,8 @@ int main()
 	proc_create(process_A);
 	proc_create(process_B);
 	proc_create(process_C);
+	proc_create(process_D);
+	proc_create(process_idle);
 
 	proc_interrupts_init(1000);
 	proc_run(0);

@@ -3,6 +3,7 @@
 .global ctx_swap
 .global timer0_int_handler
 .global Int_SoftwareInterrupt
+.global svc_sleep
 .global svc_sem_take
 .global svc_sem_give
 .extern timer0_callback
@@ -121,6 +122,10 @@ Int_SoftwareInterrupt:		//much of code is shared between timer and software inte
 	ldmfd	sp!, {pc}^	//return to user mode with new pc
 
 /* All SVCs */
+svc_sleep:
+	svc	#0
+	bx	lr
+
 svc_sem_take:
 	svc	#1
 	bx	lr
